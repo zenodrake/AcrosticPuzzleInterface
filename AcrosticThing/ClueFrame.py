@@ -1,17 +1,13 @@
 import tkinter as tk
-
+from ClueDisplay import ClueDisplay
 
 class ClueFrame(tk.Frame):
+    """clue_dict should be formatted thusly: {int: (str, []), ...}"""
     def __init__(self, master, clue_dict, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(master, **kwargs)
         self.master = master
         self.clue_dict = clue_dict
         self.configure(bg='green')
-
-        # label = tk.Label(self, text='Thingus')
-        # label.pack(side=tk.LEFT, fill=tk.X, expand=True)
-
-
 
         self.sample_dict = {
                 1: ('john sayles western', [1, 2, 3]),
@@ -48,19 +44,13 @@ class ClueFrame(tk.Frame):
         if not self.clue_dict:
             self.clue_dict = self.sample_dict
 
-        num_clues = len(self.clue_dict)
+        # num_clues = len(self.clue_dict)
         for k, v in self.clue_dict.items():
             label_text = chr(int(k)+64) + '. '
             clue_text = v[0]
             entry_numbers = v[1]
+            clue = ClueDisplay(self, label_text + clue_text, entry_numbers, bg='green')
 
-            # create a frame to hold each clue. this frame will hold the Label with the clue text
-            # and however many entries are necessary for the answer
-            clue_frame = tk.Frame(self, bg='green')
-            clue_label = tk.Label(clue_frame, text=label_text + clue_text, fg='black', bg='white')
-
-            # grid_row = 0
-            # grid_col = 0
             if k < 14:
                 grid_row = k
                 grid_col = 1
@@ -69,14 +59,13 @@ class ClueFrame(tk.Frame):
                 grid_row = k-13
                 grid_col = 2
 
-            clue_frame.grid(row=grid_row, column=grid_col, sticky='w', padx=(5, 10))  #when padx (or pady) is passed a tuple, the left value controls padding on the left, right on the right
-            clue_label.grid(row=1, column=0, padx=(0, 5))
-            for c, i in enumerate(entry_numbers, 2):
-                entry = tk.Entry(clue_frame, textvar=tk.StringVar(), bg='white', width=5)
-                entry.grid(row=1, column=c, padx=(2, 2))
-            # tk.Grid.rowconfigure(clue_frame, grid_row, weight=1)
-            # tk.Grid.columnconfigure(clue_frame, grid_col, weight=1)
+            clue.grid(row=grid_row, column=grid_col, sticky='w', padx=(5, 10))
 
+    def update_clue_layout(self, new_clue):
+        if self.clue_dict == self.sample_dict:
+            self.clue_dict = {}
+        self.clue_dict.update(new_clue)
+        self.layout_clues()
 
 
 if __name__ == '__main__':
@@ -105,7 +94,7 @@ if __name__ == '__main__':
         21: ('legendary corrida showman', [1, 2, 4]),
         22: ('era of mood rings', [1, 2, 4]),
         23: ('determinant of destiny in jainism', [1, 2, 4]),
-        24: ('mountani-biking slang', [1, 2, 4]),
+        24: ('mountain-biking slang', [1, 2, 4]),
         25: ('the last clue', [1, 2, 4])
     }
     cf = ClueFrame(win, sample_dict)

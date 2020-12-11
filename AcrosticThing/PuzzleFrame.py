@@ -1,5 +1,5 @@
 import tkinter as tk
-
+from GridEntry import GridEntry
 
 class PuzzleFrame(tk.Frame):
     def __init__(self, master, rows=8, columns=23, **kwargs):
@@ -26,11 +26,15 @@ class PuzzleFrame(tk.Frame):
         return puzzle_grid
 
     def generate_boxes(self):
-        for r in range(self.rows):
-            for c in range(self.columns):
-                e = tk.Entry(self, bg='blue', width=5)
+        grid_num = 1
+        for r in range(1, self.rows+1):
+            for c in range(1, self.columns+1):
+                # e = tk.Entry(self, bg='blue', width=5)
+
+                e = GridEntry(self, grid_num, bg='blue', width=5)
                 e.grid(row=r, column=c, sticky='nsew')
                 self.boxes.append(e)
+                grid_num += 1
 
         for i in range(self.rows):
             tk.Grid.rowconfigure(self, i, weight=1)

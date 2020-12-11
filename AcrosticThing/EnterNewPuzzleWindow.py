@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 import random
 
 from PuzzleFrame import PuzzleFrame
-
+from ClueFrame import ClueFrame
 """
 This class will allow the user to enter a list of questions.
 Input fields should be what?
@@ -13,8 +13,8 @@ Input fields should be what?
     
 
 """
-MIN_GRID_WIDTH, MIN_GRID_HEIGHT = 7, 7
-MAX_GRID_WIDTH, MAX_GRID_HEIGHT = 25, 25
+MIN_GRID_WIDTH, MIN_GRID_HEIGHT = 3, 3
+MAX_GRID_WIDTH, MAX_GRID_HEIGHT = 5, 5
 
 
 class EnterNewPuzzleWindow(tk.Toplevel):
@@ -24,8 +24,8 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         self.master = master
         # self.root = tk.Toplevel(self.master)
         self.transient(self.master)
-        self._default_x = 700
-        self._default_y = 300
+        self._default_x = 1000
+        self._default_y = 600
 
         self.geometry(self._get_spawn_position())
 
@@ -45,12 +45,18 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         puzzle_dimensions_frame = tk.Frame(input_frame, bg='grey')
         button_frame = tk.Frame(input_frame, bg='purple')
         clue_entry_frame = tk.Frame(input_frame, bg='green')
-        puzzle_preview_frame = tk.Frame(self, bg='white', width=300)
-        self.grid_preview_frame = None
-        self.clue_preview_frame = None
-        self.puzzle_preview_frame = tk.Frame(self, bg='white', width=300)
-        self.puzzle_preview_frame.propagate(False)
+        puzzle_preview_frame = tk.Frame(self, bg='white', width=500)
+        self.grid_preview_frame = tk.Frame(puzzle_preview_frame)
+        self.clue_preview_frame = ClueFrame(puzzle_preview_frame, self.clue_dict)
+        puzzle_preview_frame.propagate(False)
         self.grid_preview = None
+
+        # puzzle_preview_frame.bind('<Enter>', lambda e: print('entering puzzle_preview_frame'))
+        # puzzle_preview_frame.bind('<Leave>', lambda e: print('exiting puzzle_preview_frame'))
+        # self.grid_preview_frame.bind('<Enter>', lambda e: print('entering grid_preview_frame'))
+        # self.grid_preview_frame.bind('<Leave>', lambda e: print('exiting grid_preview_frame'))
+        # self.clue_preview_frame.bind('<Enter>', lambda e: print('entering clue_preview_frame'))
+        # self.clue_preview_frame.bind('<Leave>', lambda e: print('exiting clue_preview_frame'))
 
         # Label widgets
         puzzle_width_label = tk.Label(puzzle_dimensions_frame, text='Puzzle Grid Width')
@@ -69,6 +75,7 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         self.finish_button = tk.Button(button_frame, text='Generate Puzzle', command=self.generate_puzzle)
         self.cancel_button = tk.Button(button_frame, text='Cancel', command=self.on_cancel)
         mini_puzzle_grid_button = tk.Button(puzzle_dimensions_frame, text='Generate Grid Preview', command=self.generate_grid_preview)
+        mini_clues_button = tk.Button(clue_entry_frame, text='Add Clue', command=self.add_clue)
 
         # Placing the widgets into their frames using grid or pack #
         puzzle_width_label.grid(row=1, column=1)
@@ -76,6 +83,7 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         puzzle_width_spinbox.grid(row=1, column=2)
         puzzle_height_spinbox.grid(row=2, column=2)
         mini_puzzle_grid_button.grid(row=3, column=1)
+        mini_clues_button.grid(row=3, column=0, sticky='w')
 
         clue_label.grid(row=1, column=0, sticky='w')
         clue_entry.grid(row=1, column=1, sticky='w', padx=5)
@@ -87,12 +95,15 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         self.cancel_button.pack(side=tk.LEFT, padx=(0, 30))
 
         # Packing the frames into the master window
-        self.puzzle_preview_frame.pack(side=tk.RIGHT, expand=False, fill=tk.BOTH)
+        puzzle_preview_frame.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+
+        self.grid_preview_frame.pack(side=tk.TOP, expand=True, fill=tk.BOTH)
+        self.clue_preview_frame.pack(side=tk.BOTTOM, expand=False, fill=tk.X)
         input_frame.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
         puzzle_dimensions_frame.grid(row=0, column=0, sticky='w', pady=(5, 10))
-        clue_entry_frame.grid(row=1, column=0, sticky='w')
+        clue_entry_frame.grid(row=1, column=0, sticky='w', pady=(50, 10))
         # button_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.X)
-        button_frame.grid(row=2, column=0, sticky='ew', pady=100)
+        button_frame.grid(row=2, column=0, sticky='ew', pady=30)
 
     def _calculate_window_position(self):
         """Calculate the middle of the master widget window position. That location is where this widget will spawn"""
@@ -127,35 +138,44 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         It will be formatted thusly: {int: (str, []), ...}
         After the clue is entered the entry field will be cleared"""
 
-        new_clue = self.clue.get()
-        if new_clue:
+        clue = self.clue.get()
+        if clue:
             # clue_length = self.clue_length.get()
             clue_num_list = self.clue_numbers.get().split(',')
-            self.clue_dict[self._get_next_clue_num()] = (new_clue, clue_num_list)
+            new_clue = (clue, clue_num_list)
+            new_clue_num = self._get_next_clue_num()
+            self.clue_dict[new_clue_num] = new_clue
             self.clear_clue()
-            # self.summary_entry.insert(tk.END, f'{new_clue} ({clue_length})\n')
+            self.clear_clue_preview()
+            self.clue_preview_frame.update_clue_layout({new_clue_num: new_clue}) #this seems kind of ugly...
+
 
     def clear_clue(self):
         """Clear Entry widgets for entering clues"""
         self.clue.set('')
         self.clue_numbers.set('')
 
+    def clear_clue_preview(self):
+        for child in self.clue_preview_frame.winfo_children():
+            tk.Grid.grid_forget(child)
+
+
     def generate_grid_preview(self):
         """Populate the puzzle_preview_frame with a grid which will be the puzzle grid.
         If called again the previous grid will be discarded"""
-        for child in self.puzzle_preview_frame.winfo_children():
+        for child in self.grid_preview_frame.winfo_children():
             child.pack_forget()
 
         rows = self.puzzle_grid_height.get()
         columns = self.puzzle_grid_width.get()
-        self.grid_preview = PuzzleFrame(self.puzzle_preview_frame, rows=rows, columns=columns)
+        self.grid_preview = PuzzleFrame(self.grid_preview_frame, rows=rows, columns=columns)
 
     def generate_puzzle(self):
         """Assign values to the puzzle_dict variable.
         Namely: puzzle_dict['rows'], puzzle_dict['cols'], puzzle_dict['grid_states'], and puzzle_dict['clues']
         Puzzle_dict will be accessed by the PuzzleFrame of the main window to make the final grid"""
-        self.puzzle_dict['rows'] = self.puzzle_grid_width.get()
-        self.puzzle_dict['cols'] = self.puzzle_grid_height.get()
+        self.puzzle_dict['rows'] = self.puzzle_grid_height.get()
+        self.puzzle_dict['cols'] = self.puzzle_grid_width.get()
         self.puzzle_dict['grid_states'] = [child['state'] for child in self.grid_preview.winfo_children()]
         self.puzzle_dict['clues'] = self.clue_dict
         self.destroy()

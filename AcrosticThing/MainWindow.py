@@ -36,11 +36,12 @@ class MainWindow(tk.Tk):
         # wait_window pauses execution of the next line until the window is destroyed
         self.wait_window(puzzle)
         puzzle_info = puzzle.puzzle_dict
-        rows, columns, grid_states = puzzle_info['rows'], puzzle_info['cols'], puzzle_info['grid_states']
+        rows, columns = puzzle_info['rows'], puzzle_info['cols']
+        grid_states = puzzle_info['grid_states']
         clues = puzzle_info['clues']
-
         self.puzzle_frame = PuzzleFrame.from_entry_list(self, rows, columns, grid_states)
         self.puzzle_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.clue_frame = ClueFrame(self, clues)
 
 
 
