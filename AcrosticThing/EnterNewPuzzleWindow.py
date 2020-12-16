@@ -37,7 +37,7 @@ class EnterNewPuzzleWindow(tk.Toplevel):
 
         # these values are updated in the generate_puzzle method
         self.puzzle_dict = {'rows': 0, 'cols': 0, 'grid_states': [], 'clues': {}}
-        self.clue_dict = {}
+        self.clue_list = []
 
         # Define all the frames the input widgets will appear in
 
@@ -47,18 +47,11 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         clue_entry_frame = tk.Frame(input_frame, bg='green')
         puzzle_preview_frame = tk.Frame(self, bg='white', width=500)
         self.grid_preview_frame = tk.Frame(puzzle_preview_frame)
-        self.clue_preview_frame = ClueFrame(puzzle_preview_frame, self.clue_dict)
+        self.clue_preview_frame = ClueFrame(puzzle_preview_frame, self.clue_list)
         puzzle_preview_frame.propagate(False)
         self.grid_preview = None
 
-        # puzzle_preview_frame.bind('<Enter>', lambda e: print('entering puzzle_preview_frame'))
-        # puzzle_preview_frame.bind('<Leave>', lambda e: print('exiting puzzle_preview_frame'))
-        # self.grid_preview_frame.bind('<Enter>', lambda e: print('entering grid_preview_frame'))
-        # self.grid_preview_frame.bind('<Leave>', lambda e: print('exiting grid_preview_frame'))
-        # self.clue_preview_frame.bind('<Enter>', lambda e: print('entering clue_preview_frame'))
-        # self.clue_preview_frame.bind('<Leave>', lambda e: print('exiting clue_preview_frame'))
-
-        # Label widgets
+         # Label widgets
         puzzle_width_label = tk.Label(puzzle_dimensions_frame, text='Puzzle Grid Width')
         puzzle_height_label = tk.Label(puzzle_dimensions_frame, text='Puzzle Grid Height')
         clue_label = tk.Label(clue_entry_frame, text='Clue: ')
@@ -67,6 +60,12 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         # Input widgets
         puzzle_width_spinbox = tk.Spinbox(puzzle_dimensions_frame, from_=MIN_GRID_WIDTH, to=MAX_GRID_WIDTH, textvar=self.puzzle_grid_width)
         puzzle_height_spinbox = tk.Spinbox(puzzle_dimensions_frame, from_=MIN_GRID_HEIGHT, to=MAX_GRID_HEIGHT, textvar=self.puzzle_grid_height)
+
+        puzzle_width_spinbox.bind('<Button-4>', self.increase_spinbox)
+        puzzle_width_spinbox.bind('<Button-5>', self.decrease_spinbox)
+        puzzle_height_spinbox.bind('<Button-4>', self.increase_spinbox)
+        puzzle_height_spinbox.bind('<Button-5>', self.decrease_spinbox)
+
         clue_entry = tk.Entry(clue_entry_frame, textvar=self.clue)
         clue_numbers_entry = tk.Entry(clue_entry_frame, textvar=self.clue_numbers)
 
@@ -123,7 +122,7 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         # further, according to https://wiki.python.org/moin/TimeComplexity,
         # the len() function time to return is invariant with its argument length
 
-        next_num = len(self.clue_dict) + 1
+        next_num = len(self.clue_list) + 1
         return next_num
 
     def _get_spawn_position(self):
@@ -142,13 +141,12 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         if clue:
             # clue_length = self.clue_length.get()
             clue_num_list = self.clue_numbers.get().split(',')
-            new_clue = (clue, clue_num_list)
-            new_clue_num = self._get_next_clue_num()
-            self.clue_dict[new_clue_num] = new_clue
+            new_clue = [clue, clue_num_list]
+            # new_clue_num = self._get_next_clue_num()
+            self.clue_list.append(new_clue)
             self.clear_clue()
             self.clear_clue_preview()
-            self.clue_preview_frame.update_clue_layout({new_clue_num: new_clue}) #this seems kind of ugly...
-
+            self.clue_preview_frame.update_clue_layout(new_clue)
 
     def clear_clue(self):
         """Clear Entry widgets for entering clues"""
@@ -158,7 +156,6 @@ class EnterNewPuzzleWindow(tk.Toplevel):
     def clear_clue_preview(self):
         for child in self.clue_preview_frame.winfo_children():
             tk.Grid.grid_forget(child)
-
 
     def generate_grid_preview(self):
         """Populate the puzzle_preview_frame with a grid which will be the puzzle grid.
@@ -177,14 +174,35 @@ class EnterNewPuzzleWindow(tk.Toplevel):
         self.puzzle_dict['rows'] = self.puzzle_grid_height.get()
         self.puzzle_dict['cols'] = self.puzzle_grid_width.get()
         self.puzzle_dict['grid_states'] = [child['state'] for child in self.grid_preview.winfo_children()]
-        self.puzzle_dict['clues'] = self.clue_dict
+        self.puzzle_dict['clue_list'] = self.clue_list
         self.destroy()
+
+    def increase_spinbox(self, event=None):
+        sb = event.widget
+        next_num = int(sb.get()) + 1
+        if next_num > sb['to']:
+            next_num = int(sb['from'])
+
+        sb.delete(0, tk.END)
+        sb.insert(1, next_num)
+        return 'break'
+
+    def decrease_spinbox(self, event=None):
+        sb = event.widget
+        next_num = int(sb.get()) + 1
+        if next_num < sb['from']:
+            next_num = int(sb['to'])
+
+        sb.delete(0, tk.END)
+        sb.insert(1, next_num)
+        return 'break'
 
     def on_cancel(self):
         """Close this window without doing anything"""
         if __name__ == '__main__':
             self.master.destroy()
         else:
+            self.puzzle_dict = None
             self.destroy()
 
 

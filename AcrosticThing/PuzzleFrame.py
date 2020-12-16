@@ -1,6 +1,7 @@
 import tkinter as tk
 from GridEntry import GridEntry
 
+
 class PuzzleFrame(tk.Frame):
     def __init__(self, master, rows=8, columns=23, **kwargs):
         super().__init__(master, **kwargs)  ##if one does not put in a parent widget, 'master' in this case, it defaults to the root window
@@ -14,7 +15,6 @@ class PuzzleFrame(tk.Frame):
 
         self.pack()
 
-
     @classmethod
     def from_entry_list(cls, master, rows, columns, entry_list):
         puzzle_grid = cls(master, rows, columns)
@@ -23,42 +23,71 @@ class PuzzleFrame(tk.Frame):
             box.configure(state=entry_list[i], disabledbackground='black')
             box.unbind('<Button-3>')
 
+        puzzle_grid.renumber_grid()
+
         return puzzle_grid
 
-    def generate_boxes(self):
-        grid_num = 1
-        for r in range(1, self.rows+1):
-            for c in range(1, self.columns+1):
-                # e = tk.Entry(self, bg='blue', width=5)
-
-                e = GridEntry(self, grid_num, bg='blue', width=5)
-                e.grid(row=r, column=c, sticky='nsew')
-                self.boxes.append(e)
-                grid_num += 1
-
-        for i in range(self.rows):
-            tk.Grid.rowconfigure(self, i, weight=1)
-
-        for i in range(self.columns):
-            tk.Grid.columnconfigure(self, i, weight=1)
-
+    @classmethod
+    def from_clue_frame(cls, master, rows, columns, idk):
+        puzzle_grid = cls(master, rows, columns)
 
     def bind_events(self):
         for box in self.boxes:
-            box.bind('<Enter>', self.toggle_box_highlight)
-            box.bind('<Leave>', self.toggle_box_highlight)
-            box.bind('<Button-3>', self.toggle_box_state)
-            # box.bind('<Button-1>', lambda e: print(e.widget))
+            box.set_binding('<Enter>', 'toggle_highlight')
+            box.set_binding('<Leave>', 'toggle_highlight')
+            box.set_binding('<Button-3>', 'toggle_state')
+            # box.bind('<Enter>', self.toggle_box_highlight)
+            # box.bind('<Leave>', self.toggle_box_highlight)
+            # box.bind('<Button-3>', self.toggle_box_state)
+
+    def generate_boxes(self, entry_list=None):
+        grid_num = 1
+        if not entry_list:
+            for r in range(1, self.rows+1):
+                for c in range(1, self.columns+1):
+                    colors = {'bg': 'blue', 'fg': 'white', 'highlight': 'red', 'unhighlight': 'blue'}
+                    e = GridEntry(self, colors=colors, width=5)
+                    e.grid(row=r, column=c, sticky='nsew')
+                    self.boxes.append(e)
+                    grid_num += 1
+
+            for i in range(self.rows):
+                tk.Grid.rowconfigure(self, i, weight=1)
+
+            for i in range(self.columns):
+                tk.Grid.columnconfigure(self, i, weight=1)
+        else:
+            for r in range(1, self.rows+1):
+                for c in range(1, self.columns+1):
+                    pass
+
+    def get_enabled_boxes(self):
+        enabled_boxes = [box for box in self.boxes if box['state'] == 'normal']
+        enabled_dict = dict(enumerate(enabled_boxes, 1))
+        return enabled_dict
+
+
+    def renumber_grid(self):
+        num = 1
+        for box in self.boxes:
+            if box['state'] == 'normal':
+                box.grid_num = num
+                num += 1
 
     def toggle_box_highlight(self, event=None):
         box = event.widget
         if box['bg'] == 'blue':
             box.configure(bg='red')
+            # print(f'entering grid display box#: {box.grid_num}')
         else:
             box.configure(bg='blue')
+            # print(f'leaving grid display box#: {box.grid_num}')
 
         return 'break'
 
+    def reset_layout(self):
+        for box in self.boxes:
+            box.delete(0, tk.END)
 
     def highlight_box(self, event):
         box = event.widget
@@ -80,7 +109,6 @@ class PuzzleFrame(tk.Frame):
             box.configure(state='normal')
 
         return 'break'
-
 
 
 if __name__ == '__main__':
