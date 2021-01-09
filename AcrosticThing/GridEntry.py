@@ -45,8 +45,16 @@ class GridEntry(tk.Entry):
             return True
         elif action == '1':
             if index == '0':
-                self.delete(0, tk.END)
-                self.insert(0, inserted)
+                if hasattr(self, 'textvar'):
+                    self.setvar(self['textvar'], inserted.upper())
+                else:
+                    self.delete(0, tk.END)
+                    self.insert(0, inserted.upper())
+                # need to set the value this way otherwise it acts weird
+                # self.setvar(self['textvar'], inserted.upper())
+                # self['textvariable'].set(inserted.upper())
+                # self.delete(0, tk.END)
+                # self.insert(0, inserted.upper())
 
                 # reset the validate option as it is set to none after delete is called
                 self.after_idle(lambda: self.configure(validate='key'))
@@ -58,9 +66,17 @@ if __name__ == '__main__':
     win = tk.Tk()
     colors = {'fg': 'black', 'bg': 'white'}
     frame = tk.Frame(win)
+    k = tk.StringVar()
     first = GridEntry(frame, colors=colors)
-    second = tk.Entry(frame)
+    second = tk.Entry(frame, textvar=k)
+
+    def thingus(event=None):
+        print("I'm pressed")
+
+    button = tk.Button(frame, text='press me...or something', command=thingus)
+
     first.pack()
     second.pack()
+    button.pack()
     frame.pack()
     win.mainloop()
