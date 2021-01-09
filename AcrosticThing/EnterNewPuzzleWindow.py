@@ -13,8 +13,8 @@ Input fields should be what?
     
 
 """
-MIN_GRID_WIDTH, MIN_GRID_HEIGHT = 3, 3
-MAX_GRID_WIDTH, MAX_GRID_HEIGHT = 5, 5
+MIN_GRID_WIDTH, MIN_GRID_HEIGHT = 8, 8
+MAX_GRID_WIDTH, MAX_GRID_HEIGHT = 25, 25
 
 
 class EnterNewPuzzleWindow(tk.Toplevel):
