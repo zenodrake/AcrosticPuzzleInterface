@@ -8,7 +8,7 @@ class ClueFrame(tk.Frame):
         super().__init__(master, **kwargs)
         self.master = master
         self.clue_list = clue_list
-        self.clue_answers = []
+        self.clues = []
         self.configure(bg='green')
 
         self.sample_clues = [
@@ -41,28 +41,52 @@ class ClueFrame(tk.Frame):
 
         self.layout_clues()
         self.pack(expand=True, fill=tk.BOTH)
+        self.bind_events()
+
+    def allow_focus_traversal(self, event=None):
+        self.configure(takefocus=1)
+        return 'break'
+        # for clue in self.clues:
+        #     clue.allow_focus_traversal()
+
+    def deny_focus_traversal(self, event=None):
+        self.configure(takefocus=0)
+        return 'break'
+        # for clue in self.clues:
+        #     clue.allow_focus_traversal()
+
+    def bind_events(self):
+        self.deny_focus_traversal()
+        self.bind('<Enter>', self.allow_focus_traversal)
+        self.bind('<Leave>', self.deny_focus_traversal)
 
     def enable_clue_entries(self):
-        for clue in self.clue_answers:
+        for clue in self.clues:
             clue.enable_entries()
 
-    def get_clue_entries(self):
-        entries = []
-        for clue in self.clue_answers:
-            entries += clue.entries
+    def get_answer_cells(self):
+        cells = []
+        for clue in self.clues:
+            cells += clue.answer_cells
 
-        entries_dict = dict(zip([int(entry.grid_num) for entry in entries], entries))
+        entries_dict = dict(zip([int(cell.grid_num) for cell in cells], cells))
         return entries_dict
+
+    def get_clue_labels(self):
+        c = {}
+        for clue in self.clues:
+            c.update(clue.get_clue_label())
+        return c
 
     def layout_clues(self):
         if not self.clue_list:
             self.clue_list = self.sample_clues
 
         for i, v in enumerate(self.clue_list, 1):
-            label_text = chr(i+64) + '. '
+            clue_label = chr(i+64) + '. '
             clue_text = v[0]
-            answer_spaces = v[1]
-            clue_answer = ClueDisplay(self, label_text + clue_text, answer_spaces, bg='green')
+            grid_numbers = v[1]
+            clue = ClueDisplay(self, clue_label + clue_text, grid_numbers, bg='green')
 
             if i < 14:
                 grid_row = i
@@ -71,11 +95,11 @@ class ClueFrame(tk.Frame):
                 grid_row = i - 13
                 grid_col = 2
 
-            clue_answer.grid(row=grid_row, column=grid_col, sticky='w', padx=(5, 10))
-            self.clue_answers.append(clue_answer)
+            clue.grid(row=grid_row, column=grid_col, sticky='w', padx=(5, 10))
+            self.clues.append(clue)
 
     def reset_layout(self):
-        for clue in self.clue_answers:
+        for clue in self.clues:
             clue.reset_entries()
 
     def update_clue_layout(self, new_clue):
